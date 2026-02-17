@@ -1,0 +1,628 @@
+{
+  "name": "Day Trader Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a471611b-2767-4f56-aec3-6503fa7f9979",
+      "name": "Telegram Trigger",
+      "webhookId": "64d4ecc4-c102-4bc5-b52f-12281e02b732",
+      "credentials": {
+        "telegramApi": {
+          "id": "S6IFMmqiW0LLd8UA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.message.text }}"
+            },
+            {
+              "name": "interval",
+              "value": "1min"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "5d9851afd7004bc1b8c5c11a7615a277"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        -208
+      ],
+      "id": "74f47012-b049-43b9-a570-be16014d681b",
+      "name": "HTTP 1m"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.message.text }}"
+            },
+            {
+              "name": "interval",
+              "value": "15min"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "5d9851afd7004bc1b8c5c11a7615a277"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "3365a4f4-fb21-4fa6-b416-e77d03327a1b",
+      "name": "HTTP 15M"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.message.text }}"
+            },
+            {
+              "name": "interval",
+              "value": "1h"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "5d9851afd7004bc1b8c5c11a7615a277"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        192
+      ],
+      "id": "8fc26260-0bb7-4fe8-97bd-bdfefd358009",
+      "name": "HTTP 1hr"
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/everything",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.message.text }}"
+            },
+            {
+              "name": "from",
+              "value": "={{ $today.minus({days: 1}).format('yyyy-MM-dd') }}"
+            },
+            {
+              "name": "apikey",
+              "value": "ba177f068c8e4fe2a1c4d104b66c2e6b"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        416
+      ],
+      "id": "9b7b6a15-3e61-4b2c-b29f-3720ea0c1e15",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are a highly intelligent and\naccurate sentiment analyzer\nspecializing in the financial\nmarkets. Analyze the sentiment of\nthe provided text\n\n- Evaluate the immediate market\nreaction, recent news impact, and\ntechnical volatility.\n- Determine a sentiment\ncategory: \"Positive\", \"Neutral\", or\n\"Negative\".\n- Calculate a numerical score\nbetween -1 (extremely negative) and\n1 (extremely positive).\n- Provide a concise rationale\nexplaining the short-term sentiment\n(give a detailed response to\nappropriate headlines for major events.\n\nYour output must be exactly a JSON\nobject. The value must be an\nobject with three keys: \"category\",\n\"score\", and \"rationale\". Do not\noutput any additional text.\n\nFor example, your output should\nlook like:\n\n{\n  \"shortTermSentiment\": {\n    \"category\": \"Positive\",\n    \"score\": 0.7,\n    \"rationale\": \".....\"\n\nNow analyze the following text and\nproduce your JSON output:\n{{ JSON.stringify($json.articles) }}\n\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        576,
+        400
+      ],
+      "id": "09628fcf-5e73-465a-95ea-fb6c9462bb0a",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "FKdTKcURNMfOXDlc",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet result = {};\n\nitems.forEach(item => {\n\n    // Sometimes Aggregate wraps differently\n    const blocks = Array.isArray(item.json.data)\n        ? item.json.data\n        : [item.json.data];\n\n    blocks.forEach(block => {\n\n        if (!block?.meta || !block?.values) return;\n\n        const ticker   = block.meta.symbol || \"UNKNOWN\";\n        const interval = block.meta.interval || \"UNKNOWN\";\n\n        if (!result[ticker]) {\n            result[ticker] = { ticker, data: {} };\n        }\n\n        if (!result[ticker].data[interval]) {\n            result[ticker].data[interval] = [];\n        }\n\n        const cleaned = block.values.map(v => ({\n            datetime: new Date(v.datetime),\n            open: Number(v.open),\n            high: Number(v.high),\n            low: Number(v.low),\n            close: Number(v.close),\n            volume: Number(v.volume)\n        }));\n\n        result[ticker].data[interval].push(...cleaned);\n    });\n\n});\n\n// Sort each interval\nObject.values(result).forEach(t => {\n    Object.keys(t.data).forEach(interval => {\n        t.data[interval].sort((a,b)=>a.datetime-b.datetime);\n    });\n});\n\nreturn Object.values(result).map(r => ({ json: r }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        16
+      ],
+      "id": "a0623885-58f8-4b0e-a1b7-c6351441fad8",
+      "name": "Structured Data"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        528,
+        0
+      ],
+      "id": "36d1dc7a-85e8-4448-8f01-0954ae26e711",
+      "name": "Merge All Time Framse Data"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1600,
+        16
+      ],
+      "id": "56132599-a967-45cf-b663-60a9c6e57cdd",
+      "name": "Merge 2 Main Data Source"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        16
+      ],
+      "id": "efe09fda-4736-4b55-bcf3-1afdd7089c59",
+      "name": "Aggregate All Candles Data"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        16
+      ],
+      "id": "2d01b40b-f45f-4a45-90cd-9c04d93991c7",
+      "name": "Aggregate Main Data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert day trader. Using\nthe data below, please give a\nsingle, unified trade recommendation\n–Buy, Sell, or Hold–based on both\nprice action (1m, 15m, 1h candles)\nand 24h sentiment. Then provide:\n\n- Technical Recommendation (Buy,\nSell, or Hold; incorporating candle\nanalysis and sentiment)\n- Entry Price\n- Stop-Loss\n- Target/Exit Price\n\nProvide your answer as plain text\nwith bullet points and clear line\nbreaks.\n\nTechnical Data (candles):\n{{ JSON.stringify($json.data[0]) }}\n\nSentiment Analysis (past 24h):\n{{ JSON.stringify($json.data[1]) }}\n\nEach candle object has:\n- timeframe: \"1m\", \"15m\", or \"1h\"\n- candles: [openTime, open, high,\nlow, close, volume, ...]\n\nSteps for the agent:\n1. Group candles by timeframe (1m,\n15m, 1h).\n2. Use 1m & 15m action + indicators\n(RSI, MACD, trendlines) for optimal\nentry.\n3. Confirm trend with 1h data.\n4. Factor in sentiment to refine\nthe Buy/Sell/Hold call.\n\n### Response format (no extra\ntext):\n- Technical Recommendation FOR {{ $json.data[0].ticker }}:\n<BUY|SELL|HOLD>\n- Entry Price: <number>\n- Stop-Loss: <number>\n- Target/Exit Price: <number>",
+        "options": {
+          "systemMessage": "=You arean expert day trader. ONLY output exactly the lines below-no rational, no extra commentary.\n\n### Response format (absolutely no other text!)\n\n- Technical Recommendation FOR {{ $json.data[0].ticker }}:\n<BUY|SELL|HOLD>\n- Entry Price: <number or N/A>\n- Stop-Loss: <number or N/A>\n- Target/Exit Price: <number or N/A>\n- Hold or Exit DecisionL <Hold|Exit> "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2000,
+        16
+      ],
+      "id": "60dfbeb3-0ac9-4b97-a033-4af0785d6cb4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1968,
+        240
+      ],
+      "id": "65451fac-a33a-4595-aa22-65b5853c1bc2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "FKdTKcURNMfOXDlc",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2384,
+        16
+      ],
+      "id": "25d1e04a-f188-43f9-b3f8-2f20cd9ec2c1",
+      "name": "Send a text message",
+      "webhookId": "1f3d2e35-1048-49a3-bc25-e14a1eeb29c5",
+      "credentials": {
+        "telegramApi": {
+          "id": "S6IFMmqiW0LLd8UA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('HTTP 1m').item.json.code }}",
+              "rightValue": 404,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        16
+      ],
+      "id": "827ed455-e483-4e0b-9038-b701ed61da89",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('HTTP 1m').item.json.message || 'Error: Invalid symbol or API issue. Please check the symbol and try again.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -192
+      ],
+      "id": "f1ba538f-f7df-448d-844c-6c89d726f835",
+      "name": "Send a text message1",
+      "webhookId": "60bc097b-6316-44a8-916f-0e14a68aab29",
+      "credentials": {
+        "telegramApi": {
+          "id": "S6IFMmqiW0LLd8UA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d5b88c2-217a-4adb-8c5f-6fee91f48867",
+              "leftValue": "={{ $json.output[0].content[0].text.shortTermSentiment }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        400
+      ],
+      "id": "6aa5609e-e3a7-4ca0-8824-ad63a7f9e04a",
+      "name": "If1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP 1m",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP 15M",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP 1hr",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP 1m": {
+      "main": [
+        [
+          {
+            "node": "Merge All Time Framse Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP 15M": {
+      "main": [
+        [
+          {
+            "node": "Merge All Time Framse Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP 1hr": {
+      "main": [
+        [
+          {
+            "node": "Merge All Time Framse Data",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Data": {
+      "main": [
+        [
+          {
+            "node": "Merge 2 Main Data Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Time Framse Data": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate All Candles Data": {
+      "main": [
+        [
+          {
+            "node": "Structured Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 2 Main Data Source": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Main Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Main Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate All Candles Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge 2 Main Data Source",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "35be3ff5-2aa5-48ae-9ec9-004959f8dfd8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d73e923228a0ed7187a6ce75b86d43a6def0ebe4d9cbcd535774ac05d29bf0ee"
+  },
+  "id": "CuPDAuamlFpRPyiX",
+  "tags": []
+}
